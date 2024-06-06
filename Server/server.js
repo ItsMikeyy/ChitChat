@@ -5,6 +5,8 @@ const session = require("express-session");
 const User = require("./Models/user.js");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
+const cors = require('cors');
+
 const passportLocalMongoose = require("passport-local-mongoose");
 const PORT = 5000;
 
@@ -20,6 +22,13 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json());
+app.use(cors(
+    {
+        origin: 'http://localhost:3000', 
+        credentials: true, 
+      }
+));
 
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
@@ -28,6 +37,7 @@ passport.deserializeUser(User.deserializeUser());
 
 
 app.post("/register", (req, res) => {
+    console.log(req.body.username)
     User.register(new User({username: req.body.username}), req.body.password, function(err, user){
         if(err){
             res.send(err);
@@ -39,11 +49,14 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login",passport.authenticate("local",{
-    successRedirect: "/secret",
-    failureRedirect: "/login"
-}), function(req, res){
     
+}), function(req, res){
+    res.json({username: req.user.username, id: req.user._id});
 });
+
+// app.post("/login", function(req, res){
+//     console.log(req.body)
+// });
 
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}.`);
