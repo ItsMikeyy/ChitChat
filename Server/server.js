@@ -40,10 +40,9 @@ app.post("/register", (req, res) => {
     console.log(req.body.username)
     User.register(new User({username: req.body.username}), req.body.password, function(err, user){
         if(err){
-            res.send(err);
+            res.status(409).send(err);
         }
         passport.authenticate("local")(req, res, function(){
-            res.redirect("/secret");
         });
     });
 });
@@ -54,9 +53,20 @@ app.post("/login",passport.authenticate("local",{
     res.json({username: req.user.username, id: req.user._id});
 });
 
-// app.post("/login", function(req, res){
-//     console.log(req.body)
-// });
+app.get("/status", (req,res) => {
+    if (req.isAuthenticated()) {
+        res.json({ user: req.user });
+    } else {
+        res.status(401).json({ message: 'Not authenticated' });
+    }
+})
+
+app.post("/logout", (req,res) => {
+    req.logout(err => {
+        if (err) { return res.status(500).json({ message: 'Error logging out' }); }
+        res.json({ message: 'Logged out successfully' });
+    });
+})
 
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}.`);

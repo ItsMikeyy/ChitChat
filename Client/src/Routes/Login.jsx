@@ -1,27 +1,23 @@
 import { useState } from "react";
+import { useAuth } from "../Context/auth";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const [formData, setFormData] = useState({
         username: '',
         password: ''
     });
+    const {login} = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const res = await fetch('http://localhost:5000/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: formData.username,
-                password: formData.password
-            }),
-            credentials: 'include', // Include credentials if needed
-        });
-
-        const data = await res.json()
-        console.log(data);
+        try {
+            await login(formData);
+            navigate('/secret');
+          } catch (err) {
+            console.log('Failed to log in');
+          }
     }
 
     const handleOnChange = (e) => {
