@@ -1,10 +1,50 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const session = require("express-session");
+const User = require("./Models/user.js");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const passportLocalMongoose = require("passport-local-mongoose");
 const PORT = 5000;
 
+mongoose.connect("mongodb://127.0.0.1:27017/chitchat");
 const app = express();
 
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(session({
+    secret:"secret",
+    resave: false,
+    saveUninitialized: false
+}));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+
+app.post("/register", (req, res) => {
+    User.register(new User({username: req.body.username}), req.body.password, function(err, user){
+        if(err){
+            res.send(err);
+        }
+        passport.authenticate("local")(req, res, function(){
+            res.redirect("/secret");
+        });
+    });
+});
+
+app.post("/login",passport.authenticate("local",{
+    successRedirect: "/secret",
+    failureRedirect: "/login"
+}), function(req, res){
+    
+});
 
 app.listen(PORT, () => {
-    console.log("Server has started.");
-})
+    console.log(`Server started on port ${PORT}.`);
+});
