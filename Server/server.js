@@ -68,6 +68,19 @@ app.post("/logout", (req,res) => {
     });
 })
 
+app.post("/search", async (req,res) => {
+    const {value} = req.body;
+    console.log(value);
+    try {
+        // Using a regular expression for a case-insensitive search
+        const users = await User.find({ username: new RegExp(value, 'i') });
+        res.json({users: users})
+        // console.log(users);
+      } catch (err) {
+        res.status(500);
+      }
+})
+
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}.`);
 });
